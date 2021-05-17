@@ -1,0 +1,4 @@
+/composer/
+/db/
+/docker/nginx/conf.d/default.conf
+/yarn_modules/

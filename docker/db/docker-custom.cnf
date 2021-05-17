@@ -1,0 +1,4 @@
+[mysqld]
+max-allowed-packet=128M
+skip-networking=0
+bind-address=0.0.0.0

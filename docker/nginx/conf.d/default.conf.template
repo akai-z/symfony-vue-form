@@ -1,0 +1,15 @@
+upstream fastcgi_backend {
+    server php:9000;
+}
+
+server {
+    listen 80;
+    server_name localhost;
+
+    set ${DOLLAR}_document_root /${DOCUMENT_ROOT};
+
+    error_log /var/log/nginx.log debug;
+
+    include conf.d/templates/${APP_TYPE}.conf;
+    include /${DOCUMENT_ROOT}/nginx.conf*;
+}

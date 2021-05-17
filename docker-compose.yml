@@ -1,0 +1,68 @@
+version: "3.8"
+services:
+  web:
+    image: nginx:alpine
+    volumes:
+      - ./web:/web
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d
+      - ./docker/nginx/docker-cmd.sh:/docker-cmd.sh
+    environment:
+      - DOCUMENT_ROOT=web/public
+      - APP_TYPE=generic
+    ports:
+      - "8080:80"
+    depends_on:
+      - php
+    command: sh -c "chmod +x /docker-cmd.sh && /docker-cmd.sh"
+  db:
+    image: mariadb:10.5.10
+    volumes:
+      - ./db/mariadb:/var/lib/mysql
+      - ./docker/db/docker-custom.cnf:/etc/mysql/conf.d/zz-docker-custom.cnf
+      - ./web:/web
+    environment:
+      - MYSQL_ROOT_PASSWORD=toor
+      - MYSQL_DATABASE=booking
+      - MYSQL_USER=user
+      - MYSQL_PASSWORD=pass
+      - MYSQL_INITDB_SKIP_TZINFO=1
+    ports:
+      - 3306:3306
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    environment:
+     - PMA_ARBITRARY=1
+    ports:
+     - 8181:80
+    volumes:
+     - /sessions
+    external_links:
+      - db
+    depends_on:
+      - db
+  php:
+    image: php-fpm-alpine
+    build:
+      context: ./docker/php/7.4
+      args:
+        - PHP_FULL_INSTALL=1
+    working_dir: /web
+    volumes:
+      - ./web:/web
+      - ./composer:/root/.composer/cache
+      - ./docker/php/7.4/ini/php.ini:/usr/local/etc/php/conf.d/z-docker-php.ini
+      - ./docker/php/7.4/ini/xdebug.ini:/usr/local/etc/php/conf.d/z-docker-php-ext-xdebug-custom.ini
+    depends_on:
+      - db
+  mailhog:
+    image: mailhog/mailhog
+    ports:
+      - 1025:1025
+      - 8025:8025
+  node:
+    image: node:12-alpine
+    tty: true
+    working_dir: /web
+    volumes:
+      - ./web:/web
+      - ./yarn_modules:/usr/local/share/.cache/yarn/v6
